@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 # orbital parameters =============
 # 8 satellites
-mu = 398600.4415          # universal gravitational parameter, km
+mu = 398600.4415          # universal gravitational parameter, km^3/s^2
 rEarth = 6378.135         # radius of Earth, km
 
 e = 0.01                   # eccentricity
@@ -24,12 +24,15 @@ a = rp/(1-e)               # semi-major axis, km
 i = np.deg2rad(10.0)       # inclination, deg2rad
 RAAN = np.deg2rad(5.0)     # right ascension of the ascending node, deg2rad
 ArgPeri = np.deg2rad(15.0) # arg. of perigee, deg2rad
-#phi = np.deg2rad(0.0)      # true anomaly, deg2rad
+#phi = np.deg2rad(0.0)     # true anomaly, deg2rad
 
 p = a*(1 - e**2)           # semi-latus rectum, km
 h = np.sqrt(p*mu)          # angular momentum, km^2/s
 
-
+n = np.sqrt(mu/a**3) # sec
+t0 = 0		         # sec at perigee
+t = 300 * 60         # min to sec
+M = n*(t-t0)         # mean anomaly
 
 # =====================================
 
@@ -59,7 +62,7 @@ def newtonRaphson(E, e):
 
 
 # NOTE: CHANGE TO r,theta COORDINATES !!!!!!
-def position_velocity(M, RAAN, ArgPeri, i, mu, h, e):
+def position_velocity(RAAN, ArgPeri, i, mu, h, e):
 
     # initial value to find eccentric anomaly 
     E0 = M + 0.25*e
@@ -73,7 +76,7 @@ def position_velocity(M, RAAN, ArgPeri, i, mu, h, e):
     theta = ArgPeri + phi      # angle, rad
     r = p/(1 + e*np.cos(phi))  # radius, km
 
-    # now, we can find radius and velocity
+    # now, we can find radius and velocity (Battin Problem 3-21)
     rx = r*(np.cos(RAAN)*np.cos(theta) - np.sin(RAAN)*np.sin(theta)*np.cos(i))
     ry = r*(np.sin(RAAN)*np.cos(theta) + np.cos(RAAN)*np.sin(theta)*np.cos(i))
     rz = r*(np.sin(theta)*np.sin(i))
@@ -105,16 +108,11 @@ def twoBody(y, t, mu):
     return yDot
     
 # integration parameters and ODE integration
-for t in np.arange(4):
-    
-    n = np.sqrt(mu/a**3) # sec
-    t0 = 0		         # sec at perigee
-    t = 300 * 60         # min to sec
-    M = n*(t-t0)         # mean anomaly
-    
+#for t in np.arange(4):  
     
 y0 = position_velocity(RAAN, ArgPeri, i, mu, h, e)
-tf = 4. * 86400                 # days to sec
+#tf = 4. * 86400                 # days to sec
+tf = 2*np.pi*np.sqrt(a**3/mu)
 t = np.linspace(0., tf, 1000)   # days
 
 sol = odeint(twoBody, y0, t, args=(mu, ))
