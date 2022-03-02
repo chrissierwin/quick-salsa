@@ -19,7 +19,7 @@ mu = 398600.4415          # universal gravitational parameter, km^3/s^2
 rEarth = 6378.135         # radius of Earth, km
 
 e = 0.01                   # eccentricity
-rp = 7100 + rEarth         # radius at perigee, km
+rp = 7100          # radius at perigee, km
 a = rp/(1-e)               # semi-major axis, km
 i = np.deg2rad(10.0)       # inclination, deg2rad
 RAAN = np.deg2rad(5.0)     # right ascension of the ascending node, deg2rad
@@ -31,10 +31,16 @@ h = np.sqrt(p*mu)          # angular momentum, km^2/s
 
 n = np.sqrt(mu/a**3) # sec
 t0 = 0		         # sec at perigee
-t = 300 * 60         # min to sec
-M = n*(t-t0)         # mean anomaly
+tf = 1. * 60                 # days to sec         CHECK TIMES AND FIX ORBITAL PERIOD; CHECK RESULTS OF Y ARRAY
+#t = np.linspace(0, tf, 1000)
+#t = 2516         # min to sec
+#M = n*(t-t0)         # mean anomaly
 
 # =====================================
+
+# find mean and eccentric anomalies
+def meanAnomaly(t):
+    return 2*np.pi*(1/n)*(t-t0)
 
 def func(E): 
 	return (E - e*np.sin(E) - M)
@@ -56,25 +62,20 @@ def newtonRaphson(E, e):
     return E
 
 
-
-
-# Part 1 =========================
-
-
 # NOTE: CHANGE TO r,theta COORDINATES !!!!!!
-def position_velocity(RAAN, ArgPeri, i, mu, h, e):
+def position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e):
 
-    # initial value to find eccentric anomaly 
-    E0 = M + 0.25*e
-    E = newtonRaphson(E0, e) 
+    # # initial value to find eccentric anomaly 
+    # E0 = M + 0.25*e
+    # E = newtonRaphson(E0, e) 
 
-    # find true anomaly 
-    phi = np.arccos((np.cos(E) - e) / (1 - e*np.cos(E))) # true anomaly, rad
-    E = np.arccos((e + np.cos(phi))/(1 + e*np.cos(phi))) # eccentric anomaly, rad
+    # # find true anomaly 
+    # phi = np.arccos((np.cos(E) - e) / (1 - e*np.cos(E))) # true anomaly, rad
+    # E = np.arccos((e + np.cos(phi))/(1 + e*np.cos(phi))) # eccentric anomaly, rad
 
-    # now we can find theta and radius
-    theta = ArgPeri + phi      # angle, rad
-    r = p/(1 + e*np.cos(phi))  # radius, km
+    # # now we can find theta and radius
+    # theta = ArgPeri + phi      # angle, rad
+    # r = p/(1 + e*np.cos(phi))  # radius, km
 
     # now, we can find radius and velocity (Battin Problem 3-21)
     rx = r*(np.cos(RAAN)*np.cos(theta) - np.sin(RAAN)*np.sin(theta)*np.cos(i))
@@ -106,21 +107,49 @@ def twoBody(y, t, mu):
     yDot[5] = (-mu/(r**3))*y[2]
     
     return yDot
+
+
+# y = tf*np.zeros((6,1))
+# orbitalElements = tf*np.zeros((6,1))
+y = []
+E0 = meanAnomaly(t0) + 0.25*e
+for t in np.arange(t0, tf):
+    M = meanAnomaly(t)                                   # mean anomaly, rad
+    E = newtonRaphson(E0, e)                             # eccentric anomaly, rad
+    phi = np.arccos((np.cos(E) - e) / (1 - e*np.cos(E))) # true anomaly, rad
+
+    # now we can find theta and radius
+    theta = ArgPeri + phi      # angle, rad
+    r = p/(1 + e*np.cos(phi))  # radius, km
+
+    # re-run with new E
+    E0 = E      
+
+    y.append(position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e))
+    
+y = np.reshape(y, (int(tf), 6))
+
+
+# Part 1 =========================
+
+
+    
     
 # integration parameters and ODE integration
 #for t in np.arange(4):  
     
-y0 = position_velocity(RAAN, ArgPeri, i, mu, h, e)
+#y0 = position_velocity(RAAN, ArgPeri, i, mu, h, e)
 #tf = 4. * 86400                 # days to sec
-tf = 2*np.pi*np.sqrt(a**3/mu)
-t = np.linspace(0., tf, 1000)   # days
+#tf = 2*np.pi*np.sqrt(a**3/mu)
+#t = np.linspace(0., tf, 1000)   # days
 
-sol = odeint(twoBody, y0, t, args=(mu, ))
+#sol = odeint(twoBody, y, t, args=(mu, ))
 
 # plot
 fig = plt.figure()
 ax = plt.axes(projection='3d')
-ax.plot3D(sol[:, 0], sol[:,1], sol[:,2])
+# ax.plot3D(sol[:, 0], sol[:,1], sol[:,2])
+ax.plot3D(y[:, 0], y[:,1], y[:,2])
 
 # draw sphere
 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
@@ -131,6 +160,18 @@ ax.plot_wireframe(x, y, z, color="g")
 
 plt.show()
 
+
+
+
+
+
+
+
+print('Deployment maifest:')
+print('True anomolies:')
+print('Orbital elements:')
+print('The post deployment orbital elements were arrived at through the'
+      'use of the mean anomaly to ')
 
 # Part 2 =========================
 
