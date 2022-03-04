@@ -19,7 +19,7 @@ mu = 398600.4415          # universal gravitational parameter, km^3/s^2
 rEarth = 6378.135         # radius of Earth, km
 
 e = 0.01                   # eccentricity
-rp = 7100          # radius at perigee, km
+rp = 7100                  # radius at perigee, km
 a = rp/(1-e)               # semi-major axis, km
 i = np.deg2rad(10.0)       # inclination, deg2rad
 RAAN = np.deg2rad(5.0)     # right ascension of the ascending node, deg2rad
@@ -29,32 +29,30 @@ ArgPeri = np.deg2rad(15.0) # arg. of perigee, deg2rad
 p = a*(1 - e**2)           # semi-latus rectum, km
 h = np.sqrt(p*mu)          # angular momentum, km^2/s
 
-n = np.sqrt(mu/a**3) # sec
-t0 = 0		         # sec at perigee
-tf = 1. * 60                 # days to sec         CHECK TIMES AND FIX ORBITAL PERIOD; CHECK RESULTS OF Y ARRAY
-#t = np.linspace(0, tf, 1000)
-#t = 2516         # min to sec
-#M = n*(t-t0)         # mean anomaly
+n = np.sqrt(mu/(a**3))     # sec
+t0 = 0		               # sec at perigee
+tf = np.pi*1/n
+#tf = 8. * 3600             # hours to sec         CHECK TIMES AND FIX ORBITAL PERIOD; CHECK RESULTS OF Y ARRAY
 
 # =====================================
 
 # find mean and eccentric anomalies
-def meanAnomaly(t):
-    return 2*np.pi*(1/n)*(t-t0)
+def meanAnomaly(t, n):
+    return n*(t) #* 2*np.pi
 
-def func(E): 
+def func(E, e): 
 	return (E - e*np.sin(E) - M)
 
-def derivFunc(E): 
+def derivFunc(E, e): 
 	return (1 - e*np.cos(E))
 
 # function to find the root 
 def newtonRaphson(E, e): 
-    h = func(E) / derivFunc(E) 
+    h = func(E, e) / derivFunc(E, e) 
     
-	# convergence criteria is 10e-4
-    while abs(h) >= 0.0001: 
-        h = func(E)/derivFunc(E) 
+	# convergence criteria 
+    while abs(h) >= 0.000001: 
+        h = func(E, e)/derivFunc(E, e) 
 		
 		# E(k+1) = E(k) - f(E) / f'(E) 
         E = E - h 
@@ -62,7 +60,6 @@ def newtonRaphson(E, e):
     return E
 
 
-# NOTE: CHANGE TO r,theta COORDINATES !!!!!!
 def position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e):
 
     # # initial value to find eccentric anomaly 
@@ -84,17 +81,26 @@ def position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e):
 
     vx = -(mu/h)*(np.cos(RAAN)*(np.sin(theta) + e*np.sin(ArgPeri)) + np.sin(RAAN)*(np.cos(theta) + e*np.cos(ArgPeri))*np.cos(i))
     vy = -(mu/h)*(np.sin(RAAN)*(np.sin(theta) + e*np.sin(ArgPeri)) - np.cos(RAAN)*(np.cos(theta) + e*np.cos(ArgPeri))*np.cos(i))
-    vz = +(mu/h)*(np.cos(theta) + e*np.sin(ArgPeri)*np.sin(i))
+    vz =  (mu/h)*(np.cos(theta) + e*np.cos(ArgPeri)*np.sin(i))
 
     rVector = np.array([rx, ry, rz]) # km
     vVector = np.array([vx, vy, vz]) # km/s
+    rvVector = np.array([rx, ry, rz, vx, vy, vz])
 
-    return np.append(rVector, vVector)
+    return rvVector
 
+def position_velocity2(r, mu, e, h, phi):
 
-# return 3D vector of velocity and accel.
-# for a two body problem
+    rVector = np.array([r*np.cos(phi), r*np.sin(phi), 0])
+    vVector = np.array([(-mu/h)*np.sin(phi), (mu/h)*(e + np.cos(phi)), 0])
+    
+    return [rVector, vVector]
+
 def twoBody(y, t, mu):
+
+    # return 3D vector of velocity and accel.
+    # for a two body problem
+
     r = np.sqrt(y[0]**2 + y[1]**2 + y[2]**2)
     
     yDot = np.empty((6,))
@@ -111,26 +117,34 @@ def twoBody(y, t, mu):
 
 # y = tf*np.zeros((6,1))
 # orbitalElements = tf*np.zeros((6,1))
-y = []
-E0 = meanAnomaly(t0) + 0.25*e
+y = []; phi_all = []; E_all = []
+E0 = meanAnomaly(t0, n) + 0.25*e
 for t in np.arange(t0, tf):
-    M = meanAnomaly(t)                                   # mean anomaly, rad
-    E = newtonRaphson(E0, e)                             # eccentric anomaly, rad
-    phi = np.arccos((np.cos(E) - e) / (1 - e*np.cos(E))) # true anomaly, rad
+    M = meanAnomaly(t, n)                      # mean anomaly, rad
+    print(M)                                    # FIX MEAN ANOMALY TO REACH 2pi !!!!!!
+    E = newtonRaphson(E0, e)                   # eccentric anomaly, rad
 
-    # now we can find theta and radius
-    theta = ArgPeri + phi      # angle, rad
-    r = p/(1 + e*np.cos(phi))  # radius, km
+    if E >=0 and E <= (2*np.pi):
 
-    # re-run with new E
-    E0 = E      
+        E_all.append(E)
+        phi = np.arccos((np.cos(E) - e) / (1 - e*np.cos(E))) # true anomaly, rad
+        phi_all.append(phi)
 
-    y.append(position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e))
+        # now we can find theta and radius
+        theta = ArgPeri + phi      # angle, rad
+        r = p/(1 + e*np.cos(phi))  # radius, km
+
+        # re-run with new E
+        E0 = E      
+
+        y.append(position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e))
+        #y.append(position_velocity2(r, mu, e, h, phi))
     
-y = np.reshape(y, (int(tf), 6))
+print(len(phi_all))
+print(len(E_all))
+y = np.reshape(y, (len(E_all), 6))
 
 
-# Part 1 =========================
 
 
     
@@ -145,18 +159,18 @@ y = np.reshape(y, (int(tf), 6))
 
 #sol = odeint(twoBody, y, t, args=(mu, ))
 
-# plot
+# plot orbital position
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 # ax.plot3D(sol[:, 0], sol[:,1], sol[:,2])
 ax.plot3D(y[:, 0], y[:,1], y[:,2])
 
-# draw sphere
-u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
-x = rEarth*np.cos(u)*np.sin(v)
-y = rEarth*np.sin(u)*np.sin(v)
-z = rEarth*np.cos(v)
-ax.plot_wireframe(x, y, z, color="g")
+# # draw sphere
+# u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+# x = rEarth*np.cos(u)*np.sin(v)
+# y = rEarth*np.sin(u)*np.sin(v)
+# z = rEarth*np.cos(v)
+# ax.plot_wireframe(x, y, z, color="g")
 
 plt.show()
 
@@ -170,8 +184,9 @@ plt.show()
 print('Deployment maifest:')
 print('True anomolies:')
 print('Orbital elements:')
-print('The post deployment orbital elements were arrived at through the'
+print('The post deployment orbital elements were arrived at through the '
       'use of the mean anomaly to ')
+#print('phi\n',phi_all)
 
 # Part 2 =========================
 
