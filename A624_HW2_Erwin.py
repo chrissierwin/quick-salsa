@@ -25,14 +25,15 @@ i = np.deg2rad(10.0)       # inclination, deg2rad
 RAAN = np.deg2rad(5.0)     # right ascension of the ascending node, deg2rad
 ArgPeri = np.deg2rad(15.0) # arg. of perigee, deg2rad
 #phi = np.deg2rad(0.0)     # true anomaly, deg2rad
+deltaV = 0.05              # km/s
 
 p = a*(1 - e**2)           # semi-latus rectum, km
 h = np.sqrt(p*mu)          # angular momentum, km^2/s
 
 n = np.sqrt(mu/(a**3))     # sec
 t0 = 0		               # sec at perigee
-tf = np.pi*1/n
-#tf = 8. * 3600             # hours to sec         CHECK TIMES AND FIX ORBITAL PERIOD; CHECK RESULTS OF Y ARRAY
+tf = np.pi*np.sqrt((a**3)/mu)
+tq = tf/4
 
 # =====================================
 
@@ -62,18 +63,6 @@ def newtonRaphson(E, e):
 
 def position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e):
 
-    # # initial value to find eccentric anomaly 
-    # E0 = M + 0.25*e
-    # E = newtonRaphson(E0, e) 
-
-    # # find true anomaly 
-    # phi = np.arccos((np.cos(E) - e) / (1 - e*np.cos(E))) # true anomaly, rad
-    # E = np.arccos((e + np.cos(phi))/(1 + e*np.cos(phi))) # eccentric anomaly, rad
-
-    # # now we can find theta and radius
-    # theta = ArgPeri + phi      # angle, rad
-    # r = p/(1 + e*np.cos(phi))  # radius, km
-
     # now, we can find radius and velocity (Battin Problem 3-21)
     rx = r*(np.cos(RAAN)*np.cos(theta) - np.sin(RAAN)*np.sin(theta)*np.cos(i))
     ry = r*(np.sin(RAAN)*np.cos(theta) + np.cos(RAAN)*np.sin(theta)*np.cos(i))
@@ -89,39 +78,13 @@ def position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e):
 
     return rvVector
 
-def position_velocity2(r, mu, e, h, phi):
 
-    rVector = np.array([r*np.cos(phi), r*np.sin(phi), 0])
-    vVector = np.array([(-mu/h)*np.sin(phi), (mu/h)*(e + np.cos(phi)), 0])
-    
-    return [rVector, vVector]
-
-def twoBody(y, t, mu):
-
-    # return 3D vector of velocity and accel.
-    # for a two body problem
-
-    r = np.sqrt(y[0]**2 + y[1]**2 + y[2]**2)
-    
-    yDot = np.empty((6,))
-    
-    yDot[0] = y[3]
-    yDot[1] = y[4]
-    yDot[2] = y[5]
-    yDot[3] = (-mu/(r**3))*y[0]
-    yDot[4] = (-mu/(r**3))*y[1]
-    yDot[5] = (-mu/(r**3))*y[2]
-    
-    return yDot
-
-
-# y = tf*np.zeros((6,1))
-# orbitalElements = tf*np.zeros((6,1))
-y = []; phi_all = []; E_all = []
+LV = []; sat1 = []; sat2 = []; sat3 = []; sat4 = []
+phi_all = []; E_all = []
 E0 = meanAnomaly(t0, n) + 0.25*e
 for t in np.arange(t0, tf):
     M = meanAnomaly(t, n)                      # mean anomaly, rad
-    print(M)                                    # FIX MEAN ANOMALY TO REACH 2pi !!!!!!
+    #print(M)                                    # FIX MEAN ANOMALY TO REACH 2pi !!!!!!
     E = newtonRaphson(E0, e)                   # eccentric anomaly, rad
 
     if E >=0 and E <= (2*np.pi):
@@ -137,33 +100,53 @@ for t in np.arange(t0, tf):
         # re-run with new E
         E0 = E      
 
-        y.append(position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e))
-        #y.append(position_velocity2(r, mu, e, h, phi))
+        # if t == (tf/4) or t == (tf/2) or t == (3*tf/4) or t == tf:
+        #     temp = position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e)
+        #     temp[1] = temp[1] + deltaV
+        #     y.append(temp)
+        # else:
+        LV.append(position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e))
+
+E1 = []
+for t in np.arange(tq, tf):
+    M = meanAnomaly(t, n)                      # mean anomaly, rad
+    E = newtonRaphson(E0, e)                   # eccentric anomaly, rad
+    E1.append(E)
+
+    if E >=0 and E <= (2*np.pi):
+
+        phi = np.arccos((np.cos(E) - e) / (1 - e*np.cos(E))) # true anomaly, rad
+
+        # now we can find theta and radius
+        theta = ArgPeri + phi      # angle, rad
+        r = p/(1 + e*np.cos(phi))  # radius, km
+
+        # re-run with new E
+        E0 = E      
+
+        temp = position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e)
+        temp[1] = temp[1] + deltaV
+        sat1.append(temp)
     
 print(len(phi_all))
 print(len(E_all))
-y = np.reshape(y, (len(E_all), 6))
+LV = np.reshape(LV, (len(E_all), 6))
+sat1 = np.reshape(sat1, (len(E1), 6))
 
 
 
 
     
-    
-# integration parameters and ODE integration
-#for t in np.arange(4):  
-    
-#y0 = position_velocity(RAAN, ArgPeri, i, mu, h, e)
-#tf = 4. * 86400                 # days to sec
-#tf = 2*np.pi*np.sqrt(a**3/mu)
-#t = np.linspace(0., tf, 1000)   # days
 
-#sol = odeint(twoBody, y, t, args=(mu, ))
 
 # plot orbital position
 fig = plt.figure()
 ax = plt.axes(projection='3d')
-# ax.plot3D(sol[:, 0], sol[:,1], sol[:,2])
-ax.plot3D(y[:, 0], y[:,1], y[:,2])
+ax.plot3D(LV[:, 0], LV[:,1], LV[:,2])
+ax.plot3D(sat1[:, 0], sat1[:,1], sat1[:,2])
+# ax.plot3D(sat2[:, 0], sat2[:,1], sat2[:,2])
+# ax.plot3D(sat3[:, 0], sat3[:,1], sat3[:,2])
+# ax.plot3D(sat4[:, 0], sat4[:,1], sat4[:,2])
 
 # # draw sphere
 # u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
