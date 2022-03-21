@@ -7,6 +7,7 @@ Created Mar 2022
 Exam 1, Part B: Machine Problem
 """
 
+from asyncio.windows_events import NULL
 import numpy as np
 from scipy.integrate import odeint
 from mpl_toolkits import mplot3d 
@@ -85,7 +86,7 @@ def orbital_angles(r_vec, v_vec, a, mu):
         nu = 2*np.pi - np.arccos( np.dot(e_vec, r_vec) / (e * r) )  
 
     # period calc
-    P = 2*np.pi*np.sqrt((a**3)/mu)
+    P = 2*np.pi*np.sqrt(np.abs(a**3)/mu)
 
     # print orbital elements
     print('Semi-major axis (a, km): \t', a)
@@ -157,7 +158,7 @@ sol0 = odeint(twoBody, y0, t, args=(mu, ), atol=tol)
 y0 = np.append(rn_vec, vn_vec)
 t = np.linspace(0., 5*Pn, 27612) # propagate 5 orbits
 sol = odeint(twoBody, y0, t, args=(mu, ), atol=tol)
-
+'''
 # cartsian plot
 fig = plt.figure(1)
 ax = plt.axes(projection='3d')
@@ -176,10 +177,23 @@ ax.set_ylabel('ry (km)')
 ax.set_zlabel('rz (km)')
 ax.set_title('ODE Propagation')
 plt.legend()
-plt.show()
+plt.show()'''
 
 
 # ========================================================================================
+
+# PART 4
+
+# ========================================================================================
+
+
+
+
+
+# =====================================
+
+
+# part 5 ==========================
 # find mean and eccentric anomalies
 def meanAnomaly(t0, t, n):
     '''takes t0: time at periapse (s), t: current time (s), and n: mean motion (s). returns M: mean anomaly (rad)'''
@@ -211,104 +225,60 @@ def newtonRaphson(M, E, e):
 
 
 
-# part 4 ==========================
-
-
-def twoBody(y, t, mu):
-
-    '''return 3D vector of velocity and accel. for a two body problem'''
-
-    r = np.sqrt(y[0]**2 + y[1]**2 + y[2]**2)
-    
-    yDot = np.empty((6,))
-    
-    yDot[0] = y[3]
-    yDot[1] = y[4]
-    yDot[2] = y[5]
-    yDot[3] = (-mu/(r**3))*y[0]
-    yDot[4] = (-mu/(r**3))*y[1]
-    yDot[5] = (-mu/(r**3))*y[2]
-    
-    return yDot
-
-
-
-# position vector in terms of k1 and k2
-def k_position(a, e, d1, d2):
-
-    # common eqns
-    p = a*(1 - e*e)
-    k_sqrt = np.sqrt(1 - d1*d1) * np.sqrt(1 - d2*d2)
-
-    # build position vectors
-    r_const = a*( np.sqrt(1 - d1*d2 + k_sqrt) ) / (np.sqrt(2) * (2 + d1 + d2))
-    rx = r_const * ( np.sqrt(1 - d1*d1) + np.sqrt(1 - d2*d2) )
-    ry = r_const * (d1 - d2)
-    rz = 0
-
-    # build velocity vectors
-    v_const = np.sqrt(mu/(2*p))
-    vx = v_const * -np.sqrt(1 - d1*d2 - k_sqrt)
-    vy = v_const * ( np.sqrt(1 + d1*d2 - k_sqrt) + np.sqrt(1 + d1*d2 + k_sqrt) )
-    vz = 0
-
-    rvVector = np.array([rx, ry, rz, vx, vy, vz]) # km
-
-    return rvVector
-
-
+# mmmmmmmmmmmmmm
 # position vector in terms of k1 and k2
 def k_position(a, k1, k2):
 
     k_sqrt = np.sqrt(1 - k1*k1) * np.sqrt(1 - k2*k2)
     rx = a*(np.sqrt(1 + k1*k2 + k_sqrt) + np.sqrt(1 + k1*k2 - k_sqrt)) / np.sqrt(2)
     ry = a*(k1 - k2) / 2
+    rz = 0
 
-    rVector = np.array([rx, ry]) # km
+    rVector = np.array([rx, ry, rz]) # km
 
     return rVector
-
-'''# Kepler's equation in terms of k1 and k2
-def k_Kepler(k1, k2):
-
-    kep = np.arctan((k1 - k2) / (np.sqrt(1 - k1*k1) + np.sqrt(1 - k2*k2))) - (np.sqrt(1 - k1*k1) - np.sqrt(1 - k2*k2))/2
-
-    return kep'''
 
 # propagate orbit in terms of k
 def k_propagation(t0, tf, mu, a, e, sol_array):
 
-    n = np.sqrt(mu/(a**3))                  # sec
+    n = np.sqrt(mu/np.abs(a**3))            # sec
     E0 = meanAnomaly(t0, t0, n) + 0.25*e    # initial guess, rad
     phi = np.arcsin(e)                      # rad
 
     for t in np.arange(t0, tf):
-        M = meanAnomaly(t0, t, n)                     # mean anomaly, rad (note: this is eqaul to the exam equation in k-terms)
-        E = newtonRaphson(M, E0, e)                   # eccentric anomaly, rad
-
+        M = meanAnomaly(t0, t, n)           # mean anomaly, rad (note: this is equal to the exam equation in k-terms)
+        E = newtonRaphson(M, E0, e)         # eccentric anomaly, rad
+        
         if E >=0 and E <= (2*np.pi):
 
+            #if E <= np.pi:
             # now that eccentric anomaly is known, k1 and k2 can be solved
             k1 = np.sin(phi + E)#; print(k1)
             k2 = np.sin(phi - E)#; print(k2)
+            #k_hold.append(k2)#; 
+            '''else:
+                k1 = 2*np.pi - np.sin(phi + E)#; print(k1)
+                k2 = 2*np.pi - np.sin(phi - E)#; print(k2)'''
 
             # re-run with new E
             E0 = E      
 
             temp = k_position(a, k1, k2)
-            sol_array.append(temp)
+            sol_array.append(temp)  
             
     return sol_array
 
-'''
-empa_sol = [] ; phi_all = []
-k_sol = k_propagation(0, 2*Pn, mu, an, en, empa_sol)      # CHANGE to 5 OrbitS !!!!!!
-k_sol = np.reshape(k_sol, (len(k_sol), 2))
+
+empa_sol = [] ; k_hold=[]
+k_sol = k_propagation(0, 1*Pn, mu, an, en, empa_sol)      # CHANGE to 5 OrbitS !!!!!!
+k_sol = np.reshape(k_sol, (len(k_sol), 3))
+print(len(k_hold))
 
 # plot orbital position
 fig = plt.figure(2)
 ax = plt.axes(projection='3d')
-ax.plot3D(k_sol[:, 0], k_sol[:,1], label='K-Sol')#, k_sol[:,2], label='K-Sol')
+ax.plot3D(k_sol[:, 0], k_sol[:,1], k_sol[:,2], label='K-Sol')
+ax.plot3D(k_sol[20000:27000, 0], k_sol[20000:27000,1], k_sol[20000:27000,2])
 
 # draw sphere
 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
@@ -323,18 +293,17 @@ ax.set_zlabel('rz (km)')
 ax.set_title('K-Propagation (From Part A)')
 plt.legend()
 plt.show()
-'''
-
-# ========================================================================================
 
 
 
 
 
-# =====================================
 
 
-# part 5 ==========================
+
+
+
+
 
 def position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e):
 
@@ -357,23 +326,6 @@ def position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e):
 
     return rvVector
 
-'''
-def orbital_elements(rvvector, mu):
-    
-    rVec = rvvector[0:3]
-    vVec = rvvector[3:6]
-    hVec = np.cross(rVec,vVec)
-    
-    r = np.linalg.norm(rVec)
-    v = np.linalg.norm(vVec)
-    h = np.linalg.norm(hVec)
-    
-    p = h**2 / mu
-    a = 1/(2/r - (v**2 / mu))
-    e = np.sqrt(1 - (p/a))
-    
-    return a,e
-'''
 
 def keplerian_propagation(t0, tf, mu, a, e, i, w, RAAN, sol_array):
 
@@ -395,7 +347,8 @@ def keplerian_propagation(t0, tf, mu, a, e, i, w, RAAN, sol_array):
             v = M + (2*e - (e**3)/4)*np.sin(M) + (5*(e**2) * np.sin(2*M))/4 + (13*(e**3) * np.sin(3*M))/12
             #v_all.append(v)
 
-            # now we can find more parameters
+            # now we can find theta and radius
+
             p = a*(1 - e**2)           # semi-latus rectum, km
             h = np.sqrt(p*mu)          # angular momentum, km^2/s
 
@@ -412,7 +365,7 @@ def keplerian_propagation(t0, tf, mu, a, e, i, w, RAAN, sol_array):
     return sol_array
 
 
-
+'''
 emp_sol = [] #; v_all = []
 kep_sol = keplerian_propagation(0, Pn, mu, an, en, inn, wn, Omegan, emp_sol)
 kep_sol = np.reshape(kep_sol, (len(kep_sol), 6))
@@ -434,7 +387,7 @@ ax.set_ylabel('ry (km)')
 ax.set_zlabel('rz (km)')
 ax.set_title('Keplerian Propagation')
 plt.legend()
-plt.show()
+plt.show()'''
 
 
 
@@ -464,7 +417,7 @@ def accuracy_checker(accepted_value, experimental_value, error_list):
 # set empty arrays to be plotted
 rx_error = []; ry_error = []; rz_error = []
 vx_error = []; vy_error = []; vz_error = []
-
+'''
 # check accuracy of position and velocity
 rx_error = accuracy_checker(kep_sol[:, 0], sol[:, 0], rx_error)
 ry_error = accuracy_checker(kep_sol[:, 1], sol[:, 1], ry_error)
@@ -507,6 +460,6 @@ plt.ylabel('z-velocity error')
 
 plt.suptitle('Propagation Accuracy (5 Orbital Periods)')
 plt.tight_layout()
-plt.show()
+plt.show()'''
 
 # end
