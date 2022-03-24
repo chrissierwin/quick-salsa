@@ -12,15 +12,77 @@ descent contours.'''
 
 
 import numpy as np
+'''
+# the function
+def func(Q, b, x):
+    #where Q is a matrix, b is a vector, and x is a vector
+    return .5*(x.T @ Q @ x) + b.T @ x
 
+# gradient of the function
+def grad_func(Q, x):
+    #where Q is a matrix and x is a vector
+    return np.array(Q @ x).ravel()'''
 
+# fix list error ( should be an array)
 
+def SDM(Q, b, x, N, E):
+    '''where Q is a matrix, b is a vector, x is a vector, and 
+    E is the stopping condition that tells us when to stop searching. 
+    Prints a table of results. '''
 
+    print(' iteration \t x_k \t f(x_k) - f(x_(k+1))')
+    print('-------------------------------------------------')
+    xk = x
+    for i in range(N):
+        pk = -1*(Q @ x)                               # step direction at k
+        #print(-1*(Q @ x) )
+        ak = -1 * ((Q @ x).T @ pk) / (pk.T @ Q @ pk)    # step size at k
+        xk1 = xk + (ak * pk)                          # update x_(k+1)
 
+        fxk = (.5*(x.T @ Q @ x) + b.T @ x)    # original function at x_k
+        fxk1 = (.5*(x.T @ Q @ x) + b.T @ x)   # original function at x_(k+1)
 
+        fmin = fxk - fxk1                     # towards stopping condition
 
+        print('  ', i, '\t', '[', round(xk[0,0],4), round(xk[1,0],4), round(xk[2,0],4), ']', '\t', round(fmin[0,0],4))  # print current results at k
 
+        # check for stopping condition
+        if (fmin < E):
+            i = N
+        else: 
+            xk = xk1
+'''
+def SDM(Q, b, xk, N, E):
+    #where Q is a matrix, b is a vector, x is a vector, and 
+    #E is the stopping condition that tells us when to stop searching. 
+    #Prints a table of results. 
 
+    print(' iteration \t x_k \t f(x_k) - f(x_(k+1))')
+    print('-------------------------------------------------')
+
+    for i in range(N):
+        pk = -1*grad_func(Q, xk)                               # step direction at k
+        print(type(pk))
+        print(type(grad_func(Q, xk)))
+        print(grad_func(Q, xk).T @ pk)
+        print((pk.T @ Q @ pk))
+        ak = -1 * ((grad_func(Q, xk)).T @ pk) / (pk.T @ Q @ pk) # step size at k
+
+        fxk = func(Q, b, xk)   # original function at x_k
+
+        xk1 = xk + (ak * pk)   # update x_(k+1)
+        fxk1 = func(Q, b, xk1) # original function at x_(k+1)
+
+        fmin = fxk - fxk1      # towards stopping condition
+
+        print('  ', i, '\t', '[', round(xk[0,0],4), round(xk[1,0],4), round(xk[2,0],4), ']', '\t', round(fmin[0,0],4))  # print current results at k
+
+        # check for stopping condition
+        if (fmin < E):
+            i = N
+        else: 
+            xk = xk1
+'''
 # test program with the following data =============
 error_tol = 1e-6
 
@@ -62,3 +124,21 @@ x03 = np.array([[1],
                 [3],
                 [4]])
 N3 = 40
+
+
+# Test cases ============================
+'''# test 1
+print('\nTest 1: \n')
+test1 = SDM(Q1, b1, x01, N1, error_tol)
+#print('\nTest 1: \n', test1)
+'''
+# test 2
+print('\nTest 2: \n')
+test2 = SDM(Q2, b2, x02, N2, error_tol)
+
+# test 3
+print('\nTest 3: \n')
+#test3 = SDM(Q3, b3, x03, N3, error_tol)
+#print('\nTest 3: \n', test3)
+
+# end
