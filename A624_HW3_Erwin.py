@@ -5,12 +5,14 @@ from scipy.integrate import odeint
 from mpl_toolkits import mplot3d 
 import matplotlib.pyplot as plt
 
-# Consider the perturbed two body problem, where the rates of the osculating orbital
-# elements are governed by the following Gauss' variational equations, given by:
+# integrate Gauss' Variational eqns to update orbit
 def Gauss_Vari(y, t, t0):
 
     # grab inital/updated variables
-    O = y[0]; i = y[1]; a = y[2]; w = y[3]; e = y[4]; f = y[5]
+    O = y[0]; i = y[1]; a = y[2]; w = y[3]; e = y[4]; M = y[5]
+
+    # calculate true anomaly
+    f = M + (2*e - (e**3)/4)*np.sin(M) + (5*(e**2) * np.sin(2*M))/4 + (13*(e**3) * np.sin(3*M))/12
 
     # constants / givens
     mu = 3.986e14                         # m^3/s^2, Earth's gravitational parameter
@@ -31,7 +33,7 @@ def Gauss_Vari(y, t, t0):
     dedt = -3*J2/2 *n*(a*a/(b*r))*(r_eq/r)**2 * ((p/r)*np.sin(f)*(1-3*np.sin(theta)**2*np.sin(i)**2) + (e+np.cos(f)*(2+e*np.cos(f)))*np.sin(2*theta)*np.sin(i)**2)
     dM0dt = 3*J2/2 *n*(p/(r*r*e*eta**2))*(r_eq/r)**2 * ((p+r)*np.sin(f)*np.sin(i)**2*np.sin(2*theta) + (2*r*e - p*np.cos(f))*(1-3*np.sin(i)**2*np.sin(theta)**2)) + (1.5*n/a)*(t-t0)*dadt
 
-    yDot = np.append(dOdt, didt, dwdt, dadt, dedt, dM0dt)
+    yDot = np.array([dOdt, didt, dwdt, dadt, dedt, dM0dt])
 
     return yDot
 
@@ -86,41 +88,42 @@ def position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e):
 
     return rvVector
 
-# prpogate orbit using Keplerian parameters
-def keplerian_propagation(t0, tf, mu, a, e, i, w, RAAN, sol_array):
+# propogate orbit using Keplerian parameters
+def keplerian_propagation(t0, tf, mu, a, e, i, O, w, sol_array):
 
     '''takes t0: initial time (s), tf: final time (s), mu: gravitational constant (km^3/s^2), a: semi-major axis (km),
        e: eccentricity, i: inclination (rad), w: argument of perigee (rad), RAAN: (rad), sol_array: empty array. 
        Returns keplerian propagation in sol_array.'''
-
-    n = np.sqrt(mu/(a**3))                # sec
+    '''n = np.sqrt(mu/(a**3))                # sec
     E0 = meanAnomaly(t0, t0, n) + 0.25*e  # initial guess, rad
+    M = meanAnomaly(t0, t, n)         # mean anomaly, rad
+    E = newtonRaphson(M, E0, e)       # eccentric anomaly, rad'''
+    #n = np.sqrt(mu/(a0**3))                # sec
+    #E = meanAnomaly(t0, t0, n) + 0.25*e0   # initial eccentric anomaly guess, rad
 
     for t in np.arange(t0, tf):
-        M = meanAnomaly(t0, t, n)                     # mean anomaly, rad
-        E = newtonRaphson(M, E0, e)                   # eccentric anomaly, rad
 
-        if E >=0 and E <= (2*np.pi):
+        O, i, a, w, e, M = updated_elems[t]   # grab orbital elements at current time
 
-            # v = np.arccos((np.cos(E) - e) / (1 - e*np.cos(E))) # true anomaly, rad
-            # https://en.wikipedia.org/wiki/True_anomaly
-            v = M + (2*e - (e**3)/4)*np.sin(M) + (5*(e**2) * np.sin(2*M))/4 + (13*(e**3) * np.sin(3*M))/12
-            #v_all.append(v)
+        # M = meanAnomaly(t0, t, n)         # mean anomaly, rad
+        #E = newtonRaphson(M, E, e)       # eccentric anomaly, rad
+        #keplerian_propagation(t0, t, mu, a, e, i, w, O, sol_array)
+        #if E >=0 and E <= (2*np.pi):
 
-            # now we can find theta and radius
+        # https://en.wikipedia.org/wiki/True_anomaly
+        f = M + (2*e - (e**3)/4)*np.sin(M) + (5*(e**2) * np.sin(2*M))/4 + (13*(e**3) * np.sin(3*M))/12
 
-            p = a*(1 - e**2)           # semi-latus rectum, km
-            h = np.sqrt(p*mu)          # angular momentum, km^2/s
+        # now we can find theta and radius
+        theta = w + f                 # angle, rad
+        p = a*(1 - e**2)              # semi-latus rectum, km
+        r = p/(1 + e*np.cos(f))       # radius, km
+        h = np.sqrt(p*mu)             # angular momentum, km^2/s
 
-            # now we can find theta and radius
-            theta = w + v            # angle, rad
-            r = p/(1 + e*np.cos(v))  # radius, km
+        # re-run with new E
+        #E0 = E      
 
-            # re-run with new E
-            E0 = E      
-
-            temp = position_velocity(r, theta, RAAN, w, i, mu, h, e)
-            sol_array.append(temp)
+        temp = position_velocity(r, theta, O, w, i, mu, h, e)
+        sol_array.append(temp)
             
     return sol_array
 
@@ -143,17 +146,35 @@ a0 = 7378e3          # m, initial semi-major axis
 w0 = np.deg2rad(270) # rad, initial arg. of perigee
 e0 = 0.01            # initial eccentricity
 f0 = np.pi/10        # rad, initial true anomaly
+M0 = np.arctan2((np.sqrt(1-e0*e0*np.sin(f0))/(1+e0*np.cos(f0))), (e0+np.cos(f0)/(1+e0*np.cos(f0)))) - e0*(np.sqrt(1-e0*e0*np.sin(f0))/(1+e0*np.cos(f0)))
 
 # update elements over time
 P = 2*np.pi*np.sqrt(a0**3/3.986e14)
-y0 = np.append(O0, i0, a0, w0, e0, f0)      # initial orital elements
-t0 = 0.                                     # s, initial time
-t = np.linspace(t0, 8*P, 8*P)               # s, integrate across 8 orbital periods
+y0 = np.array([O0, i0, a0, w0, e0, f0])      # initial orital elements
+t0 = 0                                       # s, initial time
+tf = int(8*P)                                # s, final time
+t = np.linspace(t0, tf, tf)                  # s, integrate across 8 orbital periods
 updated_elems = odeint(Gauss_Vari, y0, t, args = (t0,))
+#e, f, g, h, i, j = updated_elems[0]; print(j)
+
+# ============================================================
+'''n = np.sqrt(mu/(a0**3))                # sec
+E = meanAnomaly(t0, t0, n) + 0.25*e0   # initial eccentric anomaly guess, rad
+
+for t in np.arange(tf):
+
+    O, i, a, w, e, f = updated_elems[t]   # grab orbital elements at current time
+
+    M = meanAnomaly(t0, t, n)         # mean anomaly, rad
+    E = newtonRaphson(M, E, e)       # eccentric anomaly, rad
+
+    #keplerian_propagation(t0, t, mu, a, e, i, w, O, sol_array)'''
+
+
 
 # propogate orbits
 emp_sol = [] # empty array for solution
-kep_sol = keplerian_propagation(0, P, mu, a0, e0, i0, w0, O0, emp_sol)
+kep_sol = keplerian_propagation(t0, tf, mu, a0, e0, i0, O0, w0, emp_sol)
 kep_sol = np.reshape(kep_sol, (len(kep_sol), 6))
 
 # plot orbital position
@@ -176,4 +197,4 @@ plt.legend()
 plt.show()
 
 
-plt.plot(t, t)
+#plt.plot(t, t)
