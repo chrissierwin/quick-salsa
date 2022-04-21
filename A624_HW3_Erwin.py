@@ -200,7 +200,7 @@ std2 = np.std(line2)   # std of arg. of peri.
 std3 = np.std(line3)   # std of semi-major axis
 std4 = np.std(line4)   # std of eccentricity
 std5 = np.std(line5)   # std of initial mean anomaly
-
+'''
 # time varying elements
 # s = 0.25
 fig, ax1 = plt.subplots(2,3)
@@ -253,7 +253,7 @@ ax1[1,2].text(0, 1.0144, 'mean: ' + str(mu5))
 ax1[1,2].text(0, 1.001, 'std: ' + str(std5))
 
 plt.tight_layout()
-plt.show()
+plt.show()'''
 
 # find the x-intersection of perturbations and the mean
 idx0 = np.argwhere(np.diff(np.sign(updated_elems[:,0] - line0))).flatten()
@@ -421,7 +421,7 @@ ax.set_zlabel('rz (m)')
 ax.set_title('Orbital Propagation using - 1 \u03C3')
 plt.legend()
 plt.show()'''
-'''
+
 # PLUS 1STD CASE
 # time varying element line fit (numerical average) of +1std
 b0_plu, m0_plu = polyfit(t_plu, updated_elems_plu[:,0], 1)
@@ -445,7 +445,7 @@ std2_plu = np.std(b2_plu+m2_plu*t_plu)   # std of arg. of peri.
 std3_plu = np.std(b3_plu+m3_plu*t_plu)   # std of semi-major axis
 std4_plu = np.std(b4_plu+m4_plu*t_plu)   # std of eccentricity
 std5_plu = np.std(b5_plu+m5_plu*t_plu)   # std of initial mean anomaly
-'''
+
 '''
 # time varying elements
 s = 0.25
@@ -590,12 +590,12 @@ elements provided by the equations.'''
 
 
 # givens
-O0_mean = b0     # rad, initial RAAN
-i0_mean = b1     # rad, initial inclination
-w0_mean = b2     # rad, initial arg. of perigee
-a0_mean = b3     # m, initial semi-major axis
-e0_mean = b4     # initial eccentricity
-M0_mean = b5     # rad, initial mean anomaly
+O0_mean = (b0 + b0_plu + b0_min) / 3     # rad, initial RAAN
+i0_mean = (b1 + b1_plu + b1_min) / 3     # rad, initial inclination
+w0_mean = (b2 + b2_plu + b2_min) / 3     # rad, initial arg. of perigee
+a0_mean = (b3 + b3_plu + b3_min) / 3     # m, initial semi-major axis
+e0_mean = (b4 + b4_plu + b4_min) / 3     # initial eccentricity
+M0_mean = (b5 + b5_plu + b5_min) / 3     # rad, initial mean anomaly
 
 # update elements over time
 P_mean = 2*np.pi*np.sqrt(a0_mean**3/mu)
@@ -609,7 +609,7 @@ updated_elems_mean = odeint(mean_osculation, y0_mean, t_mean, rtol=1e-6, atol=1e
 emp_sol_mean = [] # empty array for solution
 kep_sol_mean = keplerian_propagation(t0, tf_mean, mu, a0_mean, e0_mean, i0_mean, O0_mean, w0_mean, emp_sol_mean)
 kep_sol_mean = np.reshape(kep_sol_mean, (len(kep_sol_mean), 6))
-
+'''
 # plot orbital position
 fig = plt.figure('Mean Oscullating Orbital Propagation')
 ax = plt.axes(projection='3d')
@@ -627,9 +627,93 @@ ax.set_ylabel('ry (m)')
 ax.set_zlabel('rz (m)')
 ax.set_title('Mean Oscullating Orbital Propagation')
 plt.legend()
-plt.show()
+plt.show()'''
 
 # IC QUESTIONS:
 # Q3: set mean_RAAN(0)= b (if y=mx+b from LS fit)
 # ^ if so, how do we add in the use of some t1 to find the mean / account for missing time?
-# Q2: Compute the numerical average of the elements obtained at each instant of time. Is this a LS fit or oscillatory avg of 0 and +-1 std?
+# take the avg of the line for (0, +-1std) at t0
+
+# time varying element line fit
+b0_mean, m0_mean = polyfit(t_mean, updated_elems_mean[:,0], 1)
+b1_mean, m1_mean = polyfit(t_mean, updated_elems_mean[:,1], 1)
+b2_mean, m2_mean = polyfit(t_mean, updated_elems_mean[:,2], 1)
+b3_mean, m3_mean = polyfit(t_mean, updated_elems_mean[:,3], 1)
+b4_mean, m4_mean = polyfit(t_mean, updated_elems_mean[:,4], 1)
+b5_mean, m5_mean = polyfit(t_mean, updated_elems_mean[:,5], 1)
+
+line0_mean = b0_mean+m0_mean*t_mean
+line1_mean = b1_mean+m1_mean*t_mean
+line2_mean = b2_mean+m2_mean*t_mean
+line3_mean = b3_mean+m3_mean*t_mean
+line4_mean = b4_mean+m4_mean*t_mean
+line5_mean = b5_mean+m5_mean*t_mean
+
+# calulate mean (mu) and standard deviation (std)
+mu0_mean = np.mean(line0_mean)
+mu1_mean = np.mean(line1_mean)
+mu2_mean = np.mean(line2_mean)
+mu3_mean = np.mean(line3_mean)
+mu4_mean = np.mean(line4_mean)
+mu5_mean = np.mean(line5_mean)
+
+std0_mean = np.std(line0_mean)   # std of RAAN
+std1_mean = np.std(line1_mean)   # std of inclination
+std2_mean = np.std(line2_mean)   # std of arg. of peri.
+std3_mean = np.std(line3_mean)   # std of semi-major axis
+std4_mean = np.std(line4_mean)   # std of eccentricity
+std5_mean = np.std(line5_mean)   # std of initial mean anomaly
+
+# time varying elements
+# s = 0.25
+fig, ax5 = plt.subplots(2,3)
+ax5[0,0].plot(t_mean, updated_elems_mean[:,0])#, s=s)
+ax5[0,0].plot(t_mean, line0_mean, color='orange')
+ax5[0,0].set_xlabel('Time (s)')
+ax5[0,0].set_ylabel('\u03A9 (rad)')
+ax5[0,0].set_title('Osculating RAAN')
+ax5[0,0].text(0, 0.78538, 'mean: ' + str(mu0))
+ax5[0,0].text(0, 0.783, 'std: ' + str(std0))
+
+ax5[0,1].plot(t_mean, updated_elems_mean[:,1])#, s=s)
+ax5[0,1].plot(t_mean, line1_mean, color='orange')
+ax5[0,1].set_xlabel('Time (s)')
+ax5[0,1].set_ylabel('i (rad)')
+ax5[0,1].set_title('Osculating Inclination')
+ax5[0,1].text(0, 0.523845, 'mean: ' + str(mu1))
+ax5[0,1].text(0, 0.52382, 'std: ' + str(std1))
+
+ax5[0,2].plot(t_mean, updated_elems_mean[:,2])#, s=s)
+ax5[0,2].plot(t_mean, line2_mean, color='orange')
+ax5[0,2].set_xlabel('Time (s)')
+ax5[0,2].set_ylabel('w (rad)')
+ax5[0,2].set_title('Osculating Argument of Perigee')
+ax5[0,2].text(0, 4.844, 'mean: ' + str(mu2))
+ax5[0,2].text(0, 4.83, 'std: ' + str(std2))
+
+ax5[1,0].plot(t_mean, updated_elems_mean[:,3])#, s=s)
+ax5[1,0].plot(t_mean, line3_mean, color='orange')
+ax5[1,0].set_xlabel('Time (s)')
+ax5[1,0].set_ylabel('a (m)')
+ax5[1,0].set_title('Osculating Semi-Major Axis')
+ax5[1,0].text(0, 7.38e6, 'mean: ' + str(mu3))
+ax5[1,0].text(0, 7.3798e6, 'std: ' + str(std3))
+
+ax5[1,1].plot(t_mean, updated_elems_mean[:,4])#, s=s)
+ax5[1,1].plot(t_mean, line4_mean, color='orange')
+ax5[1,1].set_xlabel('Time (s)')
+ax5[1,1].set_ylabel('e')
+ax5[1,1].set_title('Osculating Eccentricity')
+ax5[1,1].text(0, 0.010057, 'mean: ' + str(mu4))
+ax5[1,1].text(0, 0.0100, 'std: ' + str(std4))
+
+ax5[1,2].plot(t_mean, updated_elems_mean[:,5])#, s=s)
+ax5[1,2].plot(t_mean, line5_mean, color='orange')
+ax5[1,2].set_xlabel('Time (s)')
+ax5[1,2].set_ylabel('M0 (rad)')
+ax5[1,2].set_title('Osculating Mean Anomaly')
+ax5[1,2].text(0, 1.0144, 'mean: ' + str(mu5))
+ax5[1,2].text(0, 1.001, 'std: ' + str(std5))
+
+plt.tight_layout()
+plt.show()
