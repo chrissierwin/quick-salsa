@@ -65,7 +65,7 @@ def position_velocity(r, theta, RAAN, ArgPeri, i, mu, h, e):
 # propogate orbit using Keplerian parameters
 def keplerian_propagation(t0, tf, mu, a, e, i, O, w, sol_array):
 
-    '''EDIT***takes t0: initial time (s), tf: final time (s), mu: gravitational constant (km^3/s^2), a: semi-major axis (km),
+    '''takes t0: initial time (s), tf: final time (s), mu: gravitational constant (km^3/s^2), a: semi-major axis (km),
        e: eccentricity, i: inclination (rad), w: argument of perigee (rad), RAAN: (rad), sol_array: empty array. 
        Returns keplerian propagation in sol_array.'''
 
@@ -150,7 +150,7 @@ updated_elems = odeint(Gauss_Vari, y0, t, args = (t0,), rtol=1e-6, atol=1e-6)
 emp_sol = [] # empty array for solution
 kep_sol = keplerian_propagation(t0, tf, mu, a0, e0, i0, O0, w0, emp_sol)
 kep_sol = np.reshape(kep_sol, (len(kep_sol), 6))
-'''
+
 # plot orbital position
 fig = plt.figure('Orbital Propagation')
 ax = plt.axes(projection='3d')
@@ -169,7 +169,7 @@ ax.set_zlabel('rz (m)')
 ax.set_title('Orbital Propagation')
 plt.legend()
 plt.show()
-'''
+
 
 # time varying element line fit
 b0, m0 = polyfit(t, updated_elems[:,0], 1)
@@ -200,60 +200,59 @@ std2 = np.std(line2)   # std of arg. of peri.
 std3 = np.std(line3)   # std of semi-major axis
 std4 = np.std(line4)   # std of eccentricity
 std5 = np.std(line5)   # std of initial mean anomaly
-'''
+
 # time varying elements
-# s = 0.25
 fig, ax1 = plt.subplots(2,3)
 ax1[0,0].plot(t, updated_elems[:,0])#, s=s)
 ax1[0,0].plot(t, line0, color='orange')
 ax1[0,0].set_xlabel('Time (s)')
 ax1[0,0].set_ylabel('\u03A9 (rad)')
 ax1[0,0].set_title('Osculating RAAN')
-ax1[0,0].text(0, 0.78538, 'mean: ' + str(mu0))
-ax1[0,0].text(0, 0.783, 'std: ' + str(std0))
+ax1[0,0].text(0, 0.78538, 'mean: ' + str('{0:.6f}'.format(mu0)))
+ax1[0,0].text(0, 0.783, 'std: ' + str('{0:.6f}'.format(std0)))
 
 ax1[0,1].plot(t, updated_elems[:,1])#, s=s)
 ax1[0,1].plot(t, line1, color='orange')
 ax1[0,1].set_xlabel('Time (s)')
 ax1[0,1].set_ylabel('i (rad)')
 ax1[0,1].set_title('Osculating Inclination')
-ax1[0,1].text(0, 0.523845, 'mean: ' + str(mu1))
-ax1[0,1].text(0, 0.52382, 'std: ' + str(std1))
+ax1[0,1].text(0, 0.523845, 'mean: ' + str('{0:.6f}'.format(mu1)))
+ax1[0,1].text(0, 0.52382, 'std: ' + str('{0:.6f}'.format(std1)))
 
 ax1[0,2].plot(t, updated_elems[:,2])#, s=s)
 ax1[0,2].plot(t, line2, color='orange')
 ax1[0,2].set_xlabel('Time (s)')
 ax1[0,2].set_ylabel('w (rad)')
 ax1[0,2].set_title('Osculating Argument of Perigee')
-ax1[0,2].text(0, 4.844, 'mean: ' + str(mu2))
-ax1[0,2].text(0, 4.83, 'std: ' + str(std2))
+ax1[0,2].text(0, 4.844, 'mean: ' + str('{0:.6f}'.format(mu2)))
+ax1[0,2].text(0, 4.83, 'std: ' + str('{0:.6f}'.format(std2)))
 
 ax1[1,0].plot(t, updated_elems[:,3])#, s=s)
 ax1[1,0].plot(t, line3, color='orange')
 ax1[1,0].set_xlabel('Time (s)')
 ax1[1,0].set_ylabel('a (m)')
 ax1[1,0].set_title('Osculating Semi-Major Axis')
-ax1[1,0].text(0, 7.38e6, 'mean: ' + str(mu3))
-ax1[1,0].text(0, 7.3798e6, 'std: ' + str(std3))
+ax1[1,0].text(0, 7.38e6, 'mean: ' + str('{0:.6f}'.format(mu3)))
+ax1[1,0].text(0, 7.3798e6, 'std: ' + str('{0:.6f}'.format(std3)))
 
 ax1[1,1].plot(t, updated_elems[:,4])#, s=s)
 ax1[1,1].plot(t, line4, color='orange')
 ax1[1,1].set_xlabel('Time (s)')
 ax1[1,1].set_ylabel('e')
 ax1[1,1].set_title('Osculating Eccentricity')
-ax1[1,1].text(0, 0.010057, 'mean: ' + str(mu4))
-ax1[1,1].text(0, 0.0100, 'std: ' + str(std4))
+ax1[1,1].text(0, 0.010057, 'mean: ' + str('{0:.6f}'.format(mu4)))
+ax1[1,1].text(0, 0.0100, 'std: ' + str('{0:.6f}'.format(std4)))
 
 ax1[1,2].plot(t, updated_elems[:,5])#, s=s)
 ax1[1,2].plot(t, line5, color='orange')
 ax1[1,2].set_xlabel('Time (s)')
 ax1[1,2].set_ylabel('M0 (rad)')
 ax1[1,2].set_title('Osculating Mean Anomaly')
-ax1[1,2].text(0, 1.0144, 'mean: ' + str(mu5))
-ax1[1,2].text(0, 1.001, 'std: ' + str(std5))
+ax1[1,2].text(0, 1.0144, 'mean: ' + str('{0:.6f}'.format(mu5)))
+ax1[1,2].text(0, 1.001, 'std: ' + str('{0:.6f}'.format(std5)))
 
 plt.tight_layout()
-plt.show()'''
+plt.show()
 
 # find the x-intersection of perturbations and the mean
 idx0 = np.argwhere(np.diff(np.sign(updated_elems[:,0] - line0))).flatten()
@@ -303,7 +302,7 @@ sample3 = nd3.pdf(x3)   # 1 std semi-major axis
 sample4 = nd4.pdf(x4)   # 1 std eccentricity
 sample5 = nd5.pdf(x5)   # 1 std mean anomaly (M0)
 
-'''
+
 # plot distribution
 fig, ax2 = plt.subplots(2,3)
 ax2[0,0].plot(x0, sample0)
@@ -337,7 +336,7 @@ ax2[1,2].set_ylabel('Probability')
 ax2[1,2].set_title('Mean Anomaly Distribution')
 
 plt.tight_layout()
-plt.show()'''
+plt.show()
 
 # PLUS ONE STD
 # new initial elements using old initials + 1std
@@ -360,7 +359,7 @@ updated_elems_plu = odeint(Gauss_Vari, y0_plu, t_plu, args = (t0,), rtol=1e-6, a
 emp_sol_plu = [] # empty array for solution
 kep_sol_plu = keplerian_propagation(t0, tf, mu, a0_plu, e0_plu, i0_plu, O0_plu, w0_plu, emp_sol_plu)
 kep_sol_plu = np.reshape(kep_sol_plu, (len(kep_sol_plu), 6))
-'''
+
 # plot orbital position
 fig = plt.figure('Orbital Propagation + 1std')
 ax = plt.axes(projection='3d')
@@ -378,7 +377,7 @@ ax.set_ylabel('ry (m)')
 ax.set_zlabel('rz (m)')
 ax.set_title('Orbital Propagation using + 1 \u03C3')
 plt.legend()
-plt.show()'''
+plt.show()
 
 
 # MINUS ONE STD
@@ -402,7 +401,7 @@ updated_elems_min = odeint(Gauss_Vari, y0_min, t_min, args = (t0,), rtol=1e-6, a
 emp_sol_min = [] # empty array for solution
 kep_sol_min = keplerian_propagation(t0, tf, mu, a0_min, e0_min, i0_min, O0_min, w0_min, emp_sol_min)
 kep_sol_min = np.reshape(kep_sol_min, (len(kep_sol_min), 6))
-'''
+
 # plot orbital position
 fig = plt.figure('Orbital Propagation - 1std')
 ax = plt.axes(projection='3d')
@@ -420,7 +419,7 @@ ax.set_ylabel('ry (m)')
 ax.set_zlabel('rz (m)')
 ax.set_title('Orbital Propagation using - 1 \u03C3')
 plt.legend()
-plt.show()'''
+plt.show()
 
 # PLUS 1STD CASE
 # time varying element line fit (numerical average) of +1std
@@ -446,60 +445,59 @@ std3_plu = np.std(b3_plu+m3_plu*t_plu)   # std of semi-major axis
 std4_plu = np.std(b4_plu+m4_plu*t_plu)   # std of eccentricity
 std5_plu = np.std(b5_plu+m5_plu*t_plu)   # std of initial mean anomaly
 
-'''
+
 # time varying elements
-s = 0.25
 fig, ax3 = plt.subplots(2,3)
-ax3[0,0].scatter(t_plu, updated_elems_plu[:,0], s=s)
+ax3[0,0].plot(t_plu, updated_elems_plu[:,0])
 ax3[0,0].plot(t_plu, b0_plu+m0_plu*t_plu, color='orange')
 ax3[0,0].set_xlabel('Time (s)')
 ax3[0,0].set_ylabel('\u03A9 (rad)')
 ax3[0,0].set_title('Osculating RAAN')
-ax3[0,0].text(0, 2.123, 'mean: ' + str(mu0_plu))
-ax3[0,0].text(0, 2.12, 'std: ' + str(std0_plu))
+ax3[0,0].text(0, 2.123, 'mean: ' + str('{0:.6f}'.format(mu0_plu)))
+ax3[0,0].text(0, 2.12, 'std: ' + str('{0:.6f}'.format(std0_plu)))
 
-ax3[0,1].scatter(t_plu, updated_elems_plu[:,1], s=s)
+ax3[0,1].plot(t_plu, updated_elems_plu[:,1])
 ax3[0,1].plot(t_plu, b1_plu+m1_plu*t_plu, color='orange')
 ax3[0,1].set_xlabel('Time (s)')
 ax3[0,1].set_ylabel('i (rad)')
 ax3[0,1].set_title('Osculating Inclination')
-ax3[0,1].text(0, 2.43399, 'mean: ' + str(mu1_plu))
-ax3[0,1].text(0, 2.43396, 'std: ' + str(std1_plu))
+ax3[0,1].text(0, 2.43399, 'mean: ' + str('{0:.6f}'.format(mu1_plu)))
+ax3[0,1].text(0, 2.43396, 'std: ' + str('{0:.6f}'.format(std1_plu)))
 
-ax3[0,2].scatter(t_plu, updated_elems_plu[:,2], s=s)
+ax3[0,2].plot(t_plu, updated_elems_plu[:,2])
 ax3[0,2].plot(t_plu, b2_plu+m2_plu*t_plu, color='orange')
 ax3[0,2].set_xlabel('Time (s)')
 ax3[0,2].set_ylabel('w (rad)')
 ax3[0,2].set_title('Osculating Argument of Perigee')
-ax3[0,2].text(0, 4.792, 'mean: ' + str(mu2_plu))
-ax3[0,2].text(0, 4.782, 'std: ' + str(std2_plu))
+ax3[0,2].text(0, 4.792, 'mean: ' + str('{0:.6f}'.format(mu2_plu)))
+ax3[0,2].text(0, 4.782, 'std: ' + str('{0:.6f}'.format(std2_plu)))
 
-ax3[1,0].scatter(t_plu, updated_elems_plu[:,3], s=s)
+ax3[1,0].plot(t_plu, updated_elems_plu[:,3])
 ax3[1,0].plot(t_plu, b3_plu+m3_plu*t_plu, color='orange')
 ax3[1,0].set_xlabel('Time (s)')
 ax3[1,0].set_ylabel('a (m)')
 ax3[1,0].set_title('Osculating Semi-Major Axis')
-ax3[1,0].text(0, 7.379e6, 'mean: ' + str(mu3_plu))
-ax3[1,0].text(0, 7.3787e6, 'std: ' + str(std3_plu))
+ax3[1,0].text(0, 7.379e6, 'mean: ' + str('{0:.6f}'.format(mu3_plu)))
+ax3[1,0].text(0, 7.3787e6, 'std: ' + str('{0:.6f}'.format(std3_plu)))
 
-ax3[1,1].scatter(t_plu, updated_elems_plu[:,4], s=s)
+ax3[1,1].plot(t_plu, updated_elems_plu[:,4])
 ax3[1,1].plot(t_plu, b4_plu+m4_plu*t_plu, color='orange')
 ax3[1,1].set_xlabel('Time (s)')
 ax3[1,1].set_ylabel('e')
 ax3[1,1].set_title('Osculating Eccentricity')
-ax3[1,1].text(0, 0.0109, 'mean: ' + str(mu4_plu))
-ax3[1,1].text(0, 0.01085, 'std: ' + str(std4_plu))
+ax3[1,1].text(0, 0.0109, 'mean: ' + str('{0:.6f}'.format(mu4_plu)))
+ax3[1,1].text(0, 0.01085, 'std: ' + str('{0:.6f}'.format(std4_plu)))
 
-ax3[1,2].scatter(t_plu, updated_elems_plu[:,5], s=s)
+ax3[1,2].plot(t_plu, updated_elems_plu[:,5])
 ax3[1,2].plot(t_plu, b5_plu+m5_plu*t_plu, color='orange')
 ax3[1,2].set_xlabel('Time (s)')
 ax3[1,2].set_ylabel('M0 (rad)')
 ax3[1,2].set_title('Osculating Mean Anomaly')
-ax3[1,2].text(0, 2.128, 'mean: ' + str(mu5_plu))
-ax3[1,2].text(0, 2.12, 'std: ' + str(std5_plu))
+ax3[1,2].text(0, 2.128, 'mean: ' + str('{0:.6f}'.format(mu5_plu)))
+ax3[1,2].text(0, 2.12, 'std: ' + str('{0:.6f}'.format(std5_plu)))
 
 plt.tight_layout()
-plt.show()'''
+plt.show()
 
 
 # MINUS 1STD CASE
@@ -525,60 +523,60 @@ std2_min = np.std(b2_min+m2_min*t_min)   # std of arg. of peri.
 std3_min = np.std(b3_min+m3_min*t_min)   # std of semi-major axis
 std4_min = np.std(b4_min+m4_min*t_min)   # std of eccentricity
 std5_min = np.std(b5_min+m5_min*t_min)   # std of initial mean anomaly
-'''
+
 # time varying elements
-s = 0.25
+
 fig, ax4 = plt.subplots(2,3)
-ax4[0,0].scatter(t_min, updated_elems_min[:,0], s=s)
+ax4[0,0].plot(t_min, updated_elems_min[:,0])
 ax4[0,0].plot(t_min, b0_min+m0_min*t_min, color='orange')
 ax4[0,0].set_xlabel('Time (s)')
 ax4[0,0].set_ylabel('\u03A9 (rad)')
 ax4[0,0].set_title('Osculating RAAN')
-ax4[0,0].text(0, -.5051, 'mean: ' + str(mu0_min))
-ax4[0,0].text(0, -.5058, 'std: ' + str(std0_min))
+ax4[0,0].text(0, -.5051, 'mean: ' + str('{0:.6f}'.format(mu0_min)))
+ax4[0,0].text(0, -.5058, 'std: ' + str('{0:.6f}'.format(std0_min)))
 
-ax4[0,1].scatter(t_min, updated_elems_min[:,1], s=s)
+ax4[0,1].plot(t_min, updated_elems_min[:,1])
 ax4[0,1].plot(t_min, b1_min+m1_min*t_min, color='orange')
 ax4[0,1].set_xlabel('Time (s)')
 ax4[0,1].set_ylabel('i (rad)')
 ax4[0,1].set_title('Osculating Inclination')
-ax4[0,1].text(0, -1.386247, 'mean: ' + str(mu1_min))
-ax4[0,1].text(0, -1.386257, 'std: ' + str(std1_min))
+ax4[0,1].text(0, -1.386247, 'mean: ' + str('{0:.6f}'.format(mu1_min)))
+ax4[0,1].text(0, -1.386257, 'std: ' + str('{0:.6f}'.format(std1_min)))
 
-ax4[0,2].scatter(t_min, updated_elems_min[:,2], s=s)
+ax4[0,2].plot(t_min, updated_elems_min[:,2])
 ax4[0,2].plot(t_min, b2_min+m2_min*t_min, color='orange')
 ax4[0,2].set_xlabel('Time (s)')
 ax4[0,2].set_ylabel('w (rad)')
 ax4[0,2].set_title('Osculating Argument of Perigee')
-ax4[0,2].text(0, 4.715, 'mean: ' + str(mu2_min))
-ax4[0,2].text(0, 4.705, 'std: ' + str(std2_min))
+ax4[0,2].text(0, 4.715, 'mean: ' + str('{0:.6f}'.format(mu2_min)))
+ax4[0,2].text(0, 4.705, 'std: ' + str('{0:.6f}'.format(std2_min)))
 
-ax4[1,0].scatter(t_min, updated_elems_min[:,3], s=s)
+ax4[1,0].plot(t_min, updated_elems_min[:,3])
 ax4[1,0].plot(t_min, b3_min+m3_min*t_min, color='orange')
 ax4[1,0].set_xlabel('Time (s)')
 ax4[1,0].set_ylabel('a (m)')
 ax4[1,0].set_title('Osculating Semi-Major Axis')
-ax4[1,0].text(0, 7.3933e6, 'mean: ' + str(mu3_min))
-ax4[1,0].text(0, 7.3925e6, 'std: ' + str(std3_min))
+ax4[1,0].text(0, 7.3933e6, 'mean: ' + str('{0:.6f}'.format(mu3_min)))
+ax4[1,0].text(0, 7.3925e6, 'std: ' + str('{0:.6f}'.format(std3_min)))
 
-ax4[1,1].scatter(t_min, updated_elems_min[:,4], s=s)
+ax4[1,1].plot(t_min, updated_elems_min[:,4])
 ax4[1,1].plot(t_min, b4_min+m4_min*t_min, color='orange')
 ax4[1,1].set_xlabel('Time (s)')
 ax4[1,1].set_ylabel('e')
 ax4[1,1].set_title('Osculating Eccentricity')
-ax4[1,1].text(0, 0.0126, 'mean: ' + str(mu4_min))
-ax4[1,1].text(0, 0.0124, 'std: ' + str(std4_min))
+ax4[1,1].text(0, 0.0126, 'mean: ' + str('{0:.6f}'.format(mu4_min)))
+ax4[1,1].text(0, 0.0124, 'std: ' + str('{0:.6f}'.format(std4_min)))
 
-ax4[1,2].scatter(t_min, updated_elems_min[:,5], s=s)
+ax4[1,2].plot(t_min, updated_elems_min[:,5])
 ax4[1,2].plot(t_min, b5_min+m5_min*t_min, color='orange')
 ax4[1,2].set_xlabel('Time (s)')
 ax4[1,2].set_ylabel('M0 (rad)')
 ax4[1,2].set_title('Osculating Mean Anomaly')
-ax4[1,2].text(0, -.18, 'mean: ' + str(mu5_min))
-ax4[1,2].text(0, -.195, 'std: ' + str(std5_min))
+ax4[1,2].text(0, -.18, 'mean: ' + str('{0:.6f}'.format(mu5_min)))
+ax4[1,2].text(0, -.195, 'std: ' + str('{0:.6f}'.format(std5_min)))
 
 plt.tight_layout()
-plt.show()'''
+plt.show()
 
 
 # PROBLEM 3 =======================================
@@ -609,7 +607,7 @@ updated_elems_mean = odeint(mean_osculation, y0_mean, t_mean, rtol=1e-6, atol=1e
 emp_sol_mean = [] # empty array for solution
 kep_sol_mean = keplerian_propagation(t0, tf_mean, mu, a0_mean, e0_mean, i0_mean, O0_mean, w0_mean, emp_sol_mean)
 kep_sol_mean = np.reshape(kep_sol_mean, (len(kep_sol_mean), 6))
-'''
+
 # plot orbital position
 fig = plt.figure('Mean Oscullating Orbital Propagation')
 ax = plt.axes(projection='3d')
@@ -627,12 +625,8 @@ ax.set_ylabel('ry (m)')
 ax.set_zlabel('rz (m)')
 ax.set_title('Mean Oscullating Orbital Propagation')
 plt.legend()
-plt.show()'''
+plt.show()
 
-# IC QUESTIONS:
-# Q3: set mean_RAAN(0)= b (if y=mx+b from LS fit)
-# ^ if so, how do we add in the use of some t1 to find the mean / account for missing time?
-# take the avg of the line for (0, +-1std) at t0
 
 # time varying element line fit
 b0_mean, m0_mean = polyfit(t_mean, updated_elems_mean[:,0], 1)
@@ -641,7 +635,7 @@ b2_mean, m2_mean = polyfit(t_mean, updated_elems_mean[:,2], 1)
 b3_mean, m3_mean = polyfit(t_mean, updated_elems_mean[:,3], 1)
 b4_mean, m4_mean = polyfit(t_mean, updated_elems_mean[:,4], 1)
 b5_mean, m5_mean = polyfit(t_mean, updated_elems_mean[:,5], 1)
-
+# line = d(mean)/dt*t+b (y=mx+b)
 line0_mean = b0_mean+m0_mean*t_mean
 line1_mean = b1_mean+m1_mean*t_mean
 line2_mean = b2_mean+m2_mean*t_mean
@@ -665,55 +659,54 @@ std4_mean = np.std(line4_mean)   # std of eccentricity
 std5_mean = np.std(line5_mean)   # std of initial mean anomaly
 
 # time varying elements
-# s = 0.25
 fig, ax5 = plt.subplots(2,3)
-ax5[0,0].plot(t_mean, updated_elems_mean[:,0])#, s=s)
+ax5[0,0].plot(t_mean, updated_elems_mean[:,0])
 ax5[0,0].plot(t_mean, line0_mean, color='orange')
 ax5[0,0].set_xlabel('Time (s)')
 ax5[0,0].set_ylabel('\u03A9 (rad)')
 ax5[0,0].set_title('Osculating RAAN')
-ax5[0,0].text(0, 0.78538, 'mean: ' + str(mu0))
-ax5[0,0].text(0, 0.783, 'std: ' + str(std0))
+ax5[0,0].text(0, 0.78538, 'mean: ' + str('{0:.8f}'.format(mu0)))
+ax5[0,0].text(0, 0.7828, 'std: ' + str('{0:.8f}'.format(std0)))
 
-ax5[0,1].plot(t_mean, updated_elems_mean[:,1])#, s=s)
+ax5[0,1].plot(t_mean, updated_elems_mean[:,1])
 ax5[0,1].plot(t_mean, line1_mean, color='orange')
 ax5[0,1].set_xlabel('Time (s)')
 ax5[0,1].set_ylabel('i (rad)')
 ax5[0,1].set_title('Osculating Inclination')
-ax5[0,1].text(0, 0.523845, 'mean: ' + str(mu1))
-ax5[0,1].text(0, 0.52382, 'std: ' + str(std1))
+ax5[0,1].text(0, 0.5236502228982388, 'mean: ' + str('{0:.8f}'.format(mu1)))
+ax5[0,1].text(0, 0.523650222898234, 'std: ' + str('{0:.8f}'.format(std1)))
 
-ax5[0,2].plot(t_mean, updated_elems_mean[:,2])#, s=s)
+ax5[0,2].plot(t_mean, updated_elems_mean[:,2])
 ax5[0,2].plot(t_mean, line2_mean, color='orange')
 ax5[0,2].set_xlabel('Time (s)')
 ax5[0,2].set_ylabel('w (rad)')
 ax5[0,2].set_title('Osculating Argument of Perigee')
-ax5[0,2].text(0, 4.844, 'mean: ' + str(mu2))
-ax5[0,2].text(0, 4.83, 'std: ' + str(std2))
+ax5[0,2].text(0, 4.7379, 'mean: ' + str('{0:.8f}'.format(mu2)))
+ax5[0,2].text(0, 4.7324, 'std: ' + str('{0:.8f}'.format(std2)))
 
-ax5[1,0].plot(t_mean, updated_elems_mean[:,3])#, s=s)
+ax5[1,0].plot(t_mean, updated_elems_mean[:,3])
 ax5[1,0].plot(t_mean, line3_mean, color='orange')
 ax5[1,0].set_xlabel('Time (s)')
 ax5[1,0].set_ylabel('a (m)')
 ax5[1,0].set_title('Osculating Semi-Major Axis')
-ax5[1,0].text(0, 7.38e6, 'mean: ' + str(mu3))
-ax5[1,0].text(0, 7.3798e6, 'std: ' + str(std3))
+ax5[1,0].text(0, 7379108.926442842, 'mean: ' + str('{0:.8f}'.format(mu3)))
+ax5[1,0].text(0, 7379108.926442795, 'std: ' + str('{0:.8f}'.format(std3)))
 
-ax5[1,1].plot(t_mean, updated_elems_mean[:,4])#, s=s)
+ax5[1,1].plot(t_mean, updated_elems_mean[:,4])
 ax5[1,1].plot(t_mean, line4_mean, color='orange')
 ax5[1,1].set_xlabel('Time (s)')
 ax5[1,1].set_ylabel('e')
 ax5[1,1].set_title('Osculating Eccentricity')
-ax5[1,1].text(0, 0.010057, 'mean: ' + str(mu4))
-ax5[1,1].text(0, 0.0100, 'std: ' + str(std4))
+ax5[1,1].text(0, 0.010290124031288159, 'mean: ' + str('{0:.8f}'.format(mu4)))
+ax5[1,1].text(0, 0.010290124031288090, 'std: ' + str('{0:.8f}'.format(std4)))
 
-ax5[1,2].plot(t_mean, updated_elems_mean[:,5])#, s=s)
+ax5[1,2].plot(t_mean, updated_elems_mean[:,5])
 ax5[1,2].plot(t_mean, line5_mean, color='orange')
 ax5[1,2].set_xlabel('Time (s)')
 ax5[1,2].set_ylabel('M0 (rad)')
 ax5[1,2].set_title('Osculating Mean Anomaly')
-ax5[1,2].text(0, 1.0144, 'mean: ' + str(mu5))
-ax5[1,2].text(0, 1.001, 'std: ' + str(std5))
+ax5[1,2].text(0, 0.89144, 'mean: ' + str('{0:.8f}'.format(mu5)))
+ax5[1,2].text(0, 0.88896, 'std: ' + str('{0:.8f}'.format(std5)))
 
 plt.tight_layout()
 plt.show()
